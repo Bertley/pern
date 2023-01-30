@@ -1,9 +1,13 @@
 version: "3"
 services:
-  postgres: 
-    image: 'postgres:13.7'
+  database: 
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./database
     environment:
       - POSTGRES_PASSWORD=postgres_password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
     ports:
       - 5432:5432
     expose:
