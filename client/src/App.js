@@ -1,23 +1,136 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import React, { useCallback, useEffect, useState } from "react";
+import { getAllShifts, calculateOverlapBetweenShifts } from "./services/index";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Card from "react-bootstrap/Card";
+import Stack from "react-bootstrap/Stack";
+import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
+
+// TODO: fix multiple rendering
 
 function App() {
+  const [shifts, setShifts] = useState([]);
+  const [selectedShiftIds, setSelectedShiftIds] = useState([]);
+  const [overlapResult, setOverlapResult] = useState(null);
+  const [showAlert, setShowAlert] = useState(false);
+
+  const fetchShifts = async () => {
+    const shifts = await getAllShifts();
+    if (shifts.length) {
+      setShifts(shifts);
+    }
+  };
+
+  useEffect(() => {
+    fetchShifts();
+  }, []);
+
+  const addSelectedShift = useCallback((selectedShiftId) => {
+    setSelectedShiftIds((prev) => {
+      setShowAlert(false);
+      if (prev.includes(selectedShiftId)) {
+        const update = [];
+        for (const item of prev) {
+          if (item !== selectedShiftId) {
+            update.push(item);
+          }
+        }
+        return update;
+      } else if (prev.length === 2) {
+        return [prev[1], selectedShiftId];
+      } else {
+        return [...prev, selectedShiftId];
+      }
+    });
+  }, []);
+
+  const calculateOverlap = useCallback(async () => {
+    if (selectedShiftIds.length < 2) {
+      setShowAlert(true);
+    } else {
+      const overlapResult = await calculateOverlapBetweenShifts(
+        selectedShiftIds[0],
+        selectedShiftIds[1]
+      );
+
+      if (overlapResult) {
+        setOverlapResult(overlapResult);
+      }
+    }
+  }, [selectedShiftIds]);
+
+  const facilityIdNameMap = {
+    100: "Facility A",
+    101: "Facility B",
+    102: "Facility C",
+  };
+
+  console.log(selectedShiftIds);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Container
+        style={{
+          paddingTop: 50,
+        }}
+      >
+        <Stack gap={4}>
+          {showAlert && (
+            <Row>
+              <Alert variant="danger">
+                You need to select two shift to compare
+              </Alert>
+            </Row>
+          )}
+          <Row>
+            <Col sm={8}>
+              <h2>{`Overlap Minutes: ${
+                overlapResult?.overlapMinutes ?? ""
+              }`}</h2>
+              <h2>{`Max Overlap Threshold: ${
+                overlapResult?.maximumOverlapThresholdInMinutes ?? ""
+              }`}</h2>
+              <h2>{`Exceeds Overlap Threshold: ${
+                overlapResult?.exceedsOverlapThreshold ?? ""
+              }`}</h2>
+            </Col>
+            <Col sm={4}>
+              <Button onClick={calculateOverlap} variant="primary">
+                Submit
+              </Button>
+            </Col>
+          </Row>
+          <Row>
+            {shifts.map((item, index) => (
+              <Col key={index} xs={6} md={4}>
+                <Card
+                  style={{
+                    width: "18rem",
+                    backgroundColor: selectedShiftIds.includes(item.shift_id)
+                      ? "grey"
+                      : "white",
+                    marginTop: 30
+                  }}
+                  onClick={() => addSelectedShift(item.shift_id)}
+                >
+                  <Card.Body>
+                    <Card.Title>
+                      {facilityIdNameMap[item.facility_id]}
+                    </Card.Title>
+                    <Card.Text>{`Date: ${item.shift_date}`}</Card.Text>
+                    <Card.Text>
+                      {`Period: ${item.start_time} -  ${item.end_time}`}
+                    </Card.Text>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Stack>
+      </Container>
     </div>
   );
 }
