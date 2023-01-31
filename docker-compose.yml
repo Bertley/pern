@@ -31,7 +31,7 @@ services:
       - ./server:/app
     environment:
       - PGUSER=postgres
-      - PGHOST=postgres
+      - PGHOST=database
       - PGDATABASE=postgres
       - PGPASSWORD=postgres_password
       - PGPORT=5432
