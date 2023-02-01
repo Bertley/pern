@@ -1,6 +1,6 @@
 import "./App.css";
 import React, { useCallback, useEffect, useState } from "react";
-import { getAllShifts, calculateOverlapBetweenShifts } from "./services/index";
+import { getAllShifts, calculateOverlapBetweenShifts, getRemainingSpotsRequest, getCoworkersRequest } from "./services/index";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -9,7 +9,11 @@ import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 
-// TODO: fix multiple rendering
+const facilityIdNameMap = {
+  100: "Facility A",
+  101: "Facility B",
+  102: "Facility C",
+};
 
 function App() {
   const [shifts, setShifts] = useState([]);
@@ -24,9 +28,6 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetchShifts();
-  }, []);
 
   const addSelectedShift = useCallback((selectedShiftId) => {
     setSelectedShiftIds((prev) => {
@@ -62,13 +63,19 @@ function App() {
     }
   }, [selectedShiftIds]);
 
-  const facilityIdNameMap = {
-    100: "Facility A",
-    101: "Facility B",
-    102: "Facility C",
-  };
+  const getRemainingSpots = useCallback(async () => {
+    const remainSpots = await getRemainingSpotsRequest();
+    console.log('-----> Remaining Spots', remainSpots)
+  }, [])
 
-  console.log(selectedShiftIds);
+  const getCoworkers = useCallback(async () => {
+    const coworkers = await getCoworkersRequest();
+    console.log("-----> Anne's coworkers", coworkers)
+  }, [])
+
+  useEffect(() => {
+    fetchShifts();
+  }, []);
 
   return (
     <div className="App">
@@ -112,7 +119,7 @@ function App() {
                     backgroundColor: selectedShiftIds.includes(item.shift_id)
                       ? "grey"
                       : "white",
-                    marginTop: 30
+                    marginTop: 30,
                   }}
                   onClick={() => addSelectedShift(item.shift_id)}
                 >
@@ -128,6 +135,18 @@ function App() {
                 </Card>
               </Col>
             ))}
+          </Row>
+          <Row>
+            <Col xs={6} md={4}>
+              <Button onClick={getRemainingSpots} variant="primary">
+                Get Remaining Spots
+              </Button>
+            </Col>
+            <Col xs={6} md={4}>
+              <Button onClick={getCoworkers} variant="primary">
+                Get Co-workers
+              </Button>
+            </Col>
           </Row>
         </Stack>
       </Container>

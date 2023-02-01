@@ -28,3 +28,22 @@ export const calculateOverlapBetweenShifts = async (shiftOneId, shiftTwoId) => {
     console.log("Error running calculateOverlapBetweenShifts", error);
   }
 };
+
+export const getRemainingSpotsRequest = async () => {
+  try {
+    const response = await fetch(`${baseApiUrl}/remainingSpots`);
+    return response.json();
+  } catch (error) {
+    console.log("Error running getRemainingSpotsRequest", error);
+  }
+};
+
+export const getCoworkersRequest = async () => {
+  try {
+    const response = await fetch(`${baseApiUrl}/coworkers`);
+    return response.json();
+  } catch (error) {
+    console.log("Error running getCoworkersRequest", error);
+  }
+};
+

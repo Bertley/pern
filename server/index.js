@@ -112,6 +112,38 @@ app.post("/overlap", async (req, res) => {
   }
 });
 
+app.get("/remainingSpots", async (req, res) => {
+  try {
+    const query = `
+SELECT j.job_id, j.facility_id, j.nurse_type_needed as nurse_type, j.total_number_nurses_needed - nhjb.hired_count as remaining_spots from jobs as j
+INNER JOIN (SELECT job_id, COUNT(nurse_id) as hired_count from nurse_hired_jobs GROUP BY job_id) nhjb
+ON j.job_id = nhjb.job_id
+ORDER BY j.facility_id ASC,  j.nurse_type_needed ASC`;
+    const remainingSpots = await pgClient.query(query);
+    res.send(200, remainingSpots.rows);
+  } catch (error) {
+    console.log("Error occured while executing get remainingSpots", error);
+  }
+});
+
+app.get("/coworkers", async (req, res) => {
+  try {
+    const query = `
+SELECT nurse_name FROM nurse_hired_jobs
+INNER JOIN jobs ON jobs.job_id = nurse_hired_jobs.job_id
+INNER JOIN nurses on nurse_hired_jobs.nurse_id = nurses.nurse_id
+WHERE nurses.nurse_name != 'Anne' and jobs.facility_id = (SELECT facility_id FROM nurse_hired_jobs
+INNER JOIN jobs ON jobs.job_id = nurse_hired_jobs.job_id
+INNER JOIN nurses on nurse_hired_jobs.nurse_id = nurses.nurse_id
+WHERE nurse_name='Anne');
+`;
+    const coworkers = await pgClient.query(query);
+    res.send(200, coworkers.rows);
+  } catch (error) {
+    console.log("Error occured while executing get coworkers", error);
+  }
+});
+
 app.listen(5050, (err) => {
   console.log("Listening");
 });
