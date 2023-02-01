@@ -129,7 +129,7 @@ ORDER BY j.facility_id ASC,  j.nurse_type_needed ASC`;
 app.get("/coworkers", async (req, res) => {
   try {
     const query = `
-SELECT nurse_name FROM nurse_hired_jobs
+SELECT DISTINCT nurse_name FROM nurse_hired_jobs
 INNER JOIN jobs ON jobs.job_id = nurse_hired_jobs.job_id
 INNER JOIN nurses on nurse_hired_jobs.nurse_id = nurses.nurse_id
 WHERE nurses.nurse_name != 'Anne' and jobs.facility_id = (SELECT facility_id FROM nurse_hired_jobs
